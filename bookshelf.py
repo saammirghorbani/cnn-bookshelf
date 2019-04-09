@@ -1,8 +1,6 @@
 from skimage.util.shape import view_as_blocks
-from matplotlib import pyplot as plt
 import numpy as np
 import cv2
-import sys
 import train as cnn
 
 im = cv2.imread("data/dataset1/train/shelf1.JPG")
@@ -48,8 +46,8 @@ def patches_to_labels(mask_patches):
 
 def calc_label(mask_patch):
     # maybe we should normalize by 255 earlier?
-    sum = mask_patch.sum() / (255 * patch_dim[0] * patch_dim[1])
-    if(sum > fg_treshold):
+    patch_sum = mask_patch.sum() / (255 * patch_dim[0] * patch_dim[1])
+    if patch_sum > fg_treshold:
         return 1
     else:
         return 0
@@ -59,12 +57,6 @@ def main():
     im_patches = image_to_patches(im)
     labels = patches_to_labels(mask_to_patches(im_mask))
     cnn.train(im_patches, labels)
-    # DEBUG:
-    # print full matrix
-    # np.set_printoptions(threshold=sys.maxsize)
-    # print image
-    # plt.imshow(im)
-    # plt.show()
 
 
 if __name__ == '__main__':
