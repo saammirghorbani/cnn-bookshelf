@@ -1,11 +1,15 @@
 from skimage.util.shape import view_as_blocks
 import numpy as np
 import cv2
-import train as cnn
+import cnn
 
 im = cv2.imread("data/dataset1/train/shelf1.JPG")
 im_mask = cv2.imread("data/dataset1/train/masks/shelf1_mask.JPG")
 im_mask = cv2.cvtColor(im_mask, cv2.COLOR_BGR2GRAY)
+
+im2 = cv2.imread("data/dataset1/test/shelf2.JPG")
+im2_mask = cv2.imread("data/dataset1/test/masks/shelf2_mask.JPG")
+im2_mask = cv2.cvtColor(im2_mask, cv2.COLOR_BGR2GRAY)
 
 height, width, channels = im.shape
 patch_dim = (32, 32)
@@ -56,7 +60,10 @@ def calc_label(mask_patch):
 def main():
     im_patches = image_to_patches(im)
     labels = patches_to_labels(mask_to_patches(im_mask))
+    im2_patches = image_to_patches(im2)
+    labels2 = patches_to_labels(mask_to_patches(im2_mask))
     cnn.train(im_patches, labels)
+    cnn.test(im2_patches, labels2)
 
 
 if __name__ == '__main__':

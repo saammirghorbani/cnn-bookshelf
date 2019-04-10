@@ -1,10 +1,11 @@
 import tensorflow as tf
 
+model = tf.keras.models.Sequential()
+
 
 def train(img_data, labels):
     # 32x32 input neurons
     inputs = img_data
-    model = tf.keras.models.Sequential()
 
     # Convolution layer #1
     model.add(tf.keras.layers.Conv2D(
@@ -33,4 +34,7 @@ def train(img_data, labels):
     model.compile(optimizer=tf.keras.optimizers.SGD(), loss=tf.losses.sigmoid_cross_entropy, metrics=['accuracy'])
     model.fit(x=inputs, y=labels)
 
-    return model
+
+def test(img_data, labels):
+    est_loss, test_acc = model.evaluate(img_data, labels)
+    print('Test accuracy:', test_acc)
