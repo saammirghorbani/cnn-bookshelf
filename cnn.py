@@ -14,6 +14,7 @@ def train(img_data, labels):
         padding='same',
         data_format='channels_last',
         activation=tf.nn.relu))
+    # 28x28 neurons remaining
 
     # Pooling layer #1
     model.add(tf.keras.layers.MaxPooling2D(pool_size=[2, 2], strides=2))
@@ -31,8 +32,8 @@ def train(img_data, labels):
     model.add(tf.keras.layers.MaxPooling2D(pool_size=[10, 10]))
     # 1x1 neuron remaining
 
-    model.compile(optimizer=tf.keras.optimizers.SGD(), loss=tf.losses.sigmoid_cross_entropy, metrics=['accuracy'])
-    model.fit(x=inputs, y=labels)
+    model.compile(optimizer=tf.keras.optimizers.SGD(), loss=tf.keras.losses.binary_crossentropy, metrics=['accuracy'])
+    model.fit(x=inputs, y=labels, epochs=3)
 
 
 def test(img_data, labels):
