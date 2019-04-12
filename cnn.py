@@ -3,10 +3,8 @@ import tensorflow as tf
 model = tf.keras.models.Sequential()
 
 
-def train(img_data, labels):
+def build_model():
     # 32x32 input neurons
-    inputs = img_data
-
     # Convolution layer #1
     model.add(tf.keras.layers.Conv2D(
         filters=32,
@@ -32,8 +30,10 @@ def train(img_data, labels):
     model.add(tf.keras.layers.MaxPooling2D(pool_size=[10, 10]))
     # 1x1 neuron remaining
 
+
+def train(inputs, labels):
     model.compile(optimizer=tf.keras.optimizers.SGD(), loss=tf.keras.losses.binary_crossentropy, metrics=['accuracy'])
-    model.fit(x=inputs, y=labels, epochs=3)
+    model.fit(x=inputs, y=labels, shuffle=True)
 
 
 def test(img_data, labels):

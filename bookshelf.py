@@ -2,22 +2,16 @@ from skimage.util.shape import view_as_blocks
 import numpy as np
 import cv2
 import cnn
+import glob
 
-im = cv2.imread("data/dataset1/train/shelf1.JPG")
-im_mask = cv2.imread("data/dataset1/train/masks/shelf1_mask.JPG")
-im_mask = cv2.cvtColor(im_mask, cv2.COLOR_BGR2GRAY)
-
-im2 = cv2.imread("data/dataset1/test/shelf2.JPG")
-im2_mask = cv2.imread("data/dataset1/test/masks/shelf2_mask.JPG")
-im2_mask = cv2.cvtColor(im2_mask, cv2.COLOR_BGR2GRAY)
-
-height, width, channels = im.shape
+input_train_path = "data/dataset1/train/*.JPG"
+label_train_path = "data/dataset1/train/masks/*.JPG"
+input_test_path = "data/dataset1/test/*.JPG"
+label_test_path = "data/dataset1/test/masks/*.JPG"
 patch_dim = (32, 32)
 patch_channels = 3
-patches_x = int(width / patch_dim[0])
-patches_y = int(height / patch_dim[1])
 # minimum ratio of foreground to background pixels to label as foreground
-fg_treshold = 0.8
+fg_threshold = 0.8
 
 
 def image_to_patches(im):
@@ -49,21 +43,60 @@ def patches_to_labels(mask_patches):
 
 
 def calc_label(mask_patch):
-    # maybe we should normalize by 255 earlier?
     patch_sum = mask_patch.sum() / (patch_dim[0] * patch_dim[1])
-    if patch_sum > fg_treshold:
+    if patch_sum > fg_threshold:
         return 1
     else:
         return 0
 
 
+def read_and_format_image(file):
+    img = cv2.imread(file)
+    img = img.astype('float32') / 255
+    return img
+
+
+def read_and_format_mask(file):
+    img = cv2.imread(file)
+    img = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
+    img = img.astype('float32') / 255
+    return img
+
+
 def main():
-    im_patches = image_to_patches(im.astype('float32') / 255)
-    labels = patches_to_labels(mask_to_patches(im_mask.astype('float32') / 255))
-    im2_patches = image_to_patches(im2.astype('float32') / 255)
-    labels2 = patches_to_labels(mask_to_patches(im2_mask.astype('float32') / 255))
-    cnn.train(im_patches, labels)
-    cnn.test(im2_patches, labels2)
+    img_train = [read_and_format_image(file) for file in glob.glob(input_train_path)]
+    lbl_train = [read_and_format_mask(file) for file in glob.glob(label_train_path)]
+    img_test = [read_and_format_image(file)for file in glob.glob(input_test_path)]
+    lbl_test = [read_and_format_mask(file) for file in glob.glob(label_test_path)]
+
+    cnn.build_model()
+    global height, width, channels, patches_x, patches_y
+
+    for n in range(0, len(img_train)):
+        height, width, channels = img_train[n].shape
+        patches_x = int(width / patch_dim[0])
+        patches_y = int(height / patch_dim[1])
+        im_patches = image_to_patches(img_train[n])
+        height, width = lbl_train[n].shape
+        channels = 1
+        patches_x = int(width / patch_dim[0])
+        patches_y = int(height / patch_dim[1])
+        labels = patches_to_labels(mask_to_patches(lbl_train[n]))
+        print('Training sample:', n+1)
+        cnn.train(im_patches, labels)
+
+    for n in range(0, len(img_test)):
+        height, width, channels = img_test[n].shape
+        patches_x = int(width / patch_dim[0])
+        patches_y = int(height / patch_dim[1])
+        im_patches = image_to_patches(img_test[n])
+        height, width = lbl_test[n].shape
+        channels = 1
+        patches_x = int(width / patch_dim[0])
+        patches_y = int(height / patch_dim[1])
+        labels = patches_to_labels(mask_to_patches(lbl_test[n]))
+        print('Testing sample:', n+1)
+        cnn.test(im_patches, labels)
 
 
 if __name__ == '__main__':
