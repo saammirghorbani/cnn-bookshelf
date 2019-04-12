@@ -27,8 +27,12 @@ def build_model():
     # 10x10 neurons remaining
 
     # Pooling layer #2
-    model.add(tf.keras.layers.MaxPooling2D(pool_size=[10, 10]))
-    # 1x1 neuron remaining
+    model.add(tf.keras.layers.MaxPooling2D(pool_size=[2, 2]))
+    # 5x5 neurons remaining
+
+    # Dense Layer
+    model.add(tf.keras.layers.Flatten())
+    model.add(tf.keras.layers.Dense(units=1))
 
 
 def train(inputs, labels):
