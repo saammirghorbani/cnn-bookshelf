@@ -11,7 +11,7 @@ label_test_path = "data/dataset1/test/masks/*.JPG"
 patch_dim = (32, 32)
 patch_channels = 3
 # minimum ratio of foreground to background pixels to label as foreground
-fg_threshold = 0.8
+fg_threshold = 0.7
 
 
 def image_to_patches(im):
@@ -63,6 +63,19 @@ def read_and_format_mask(file):
     return img
 
 
+def outlier_free_set(patches, labels):
+    outlier_indices = []
+    for n in range(0, len(labels)):
+        # TODO: update in [calc_label] if this method is to be used
+        if labels[n] == -1:
+            outlier_indices.append(n)
+
+    pa = np.delete(patches, outlier_indices, axis=0)
+    lb = np.delete(labels, outlier_indices, axis=0)
+    pa = np.reshape(pa, (len(lb), 32, 32, 3))
+    return pa, lb
+
+
 def main():
     img_train = [read_and_format_image(file) for file in glob.glob(input_train_path)]
     lbl_train = [read_and_format_mask(file) for file in glob.glob(label_train_path)]
@@ -82,6 +95,7 @@ def main():
         patches_x = int(width / patch_dim[0])
         patches_y = int(height / patch_dim[1])
         labels = patches_to_labels(mask_to_patches(lbl_train[n]))
+        # im_patches, labels = outlier_free_set(im_patches, labels)
         print('Training sample:', n+1)
         cnn.train(im_patches, labels)
 
