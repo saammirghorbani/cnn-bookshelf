@@ -7,7 +7,7 @@ def build_model():
     # 32x32 input neurons
     # Convolution layer #1
     model.add(tf.keras.layers.Conv2D(
-        filters=32,
+        filters=16,
         kernel_size=[5, 5],
         padding='same',
         data_format='channels_last',
@@ -20,7 +20,7 @@ def build_model():
 
     # Convolution layer #2
     model.add(tf.keras.layers.Conv2D(
-        filters=64,
+        filters=32,
         kernel_size=[5, 5],
         padding='same',
         activation=tf.nn.relu))
@@ -32,7 +32,11 @@ def build_model():
 
     # Dense Layer
     model.add(tf.keras.layers.Flatten())
-    model.add(tf.keras.layers.Dense(units=1))
+    model.add(tf.keras.layers.Dense(units=25, activation=tf.nn.relu))
+    # Reduce chance of overfitting with Dropout layer
+    model.add(tf.keras.layers.Dropout(rate=0.3))
+    model.add(tf.keras.layers.Dense(units=1, activation=tf.nn.log_softmax))
+
     model.compile(optimizer=tf.keras.optimizers.SGD(), loss=tf.keras.losses.binary_crossentropy, metrics=['accuracy'])
 
 

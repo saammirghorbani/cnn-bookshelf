@@ -57,9 +57,9 @@ def read_and_format_image(file):
 
 
 def read_and_format_mask(file):
-    img = cv2.imread(file)
-    img = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
-    img = img.astype('float32') / 255
+    img = cv2.imread(file, cv2.IMREAD_GRAYSCALE)
+    (thresh, im_bw) = cv2.threshold(img, 128, 255, cv2.THRESH_BINARY | cv2.THRESH_OTSU)
+    img = im_bw.astype('float32') / 255
     return img
 
 
