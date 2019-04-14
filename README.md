@@ -2,5 +2,5 @@
 Convolutional Neural Network for detecting bookshelves in images.
 #### Install Dependencies
 ```bash
-pip install glob3 numpy opencv-python scikit-image scikit-learn tensorflow
+pip3 install glob3 numpy opencv-python scikit-image scikit-learn tensorflow
 ```
