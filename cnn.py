@@ -1,6 +1,6 @@
 import numpy as np
 import tensorflow as tf
-from sklearn.metrics import accuracy_score
+from sklearn.metrics import accuracy_score, classification_report
 from sklearn.utils import class_weight
 
 model = tf.keras.models.Sequential()
@@ -45,21 +45,13 @@ def train(inputs, labels):
     # assign weights to classes to counter for imbalance
     class_weights = class_weight.compute_class_weight('balanced', np.unique(labels), labels)
     class_weights_dict = {i: class_weights[i] for i in range(0, len(class_weights))}
-    # batch size equal to number of inputs per row in image, for visual comparison
-    model.fit(x=inputs, y=labels, batch_size=144, class_weight=class_weights_dict)
+    model.fit(x=inputs, y=labels, class_weight=class_weights_dict)
 
 
 def test(inputs, labels):
-    est_loss, test_acc = model.evaluate(inputs, labels, batch_size=144)
-    print('Test accuracy:', test_acc)
-
-
-def predict(inputs, labels):
-    """Used for debugging the output of the network. Prints all output values
-    and the predicted classes with overall accuracy of the predictions"""
-    predicted_values = model.predict(inputs)
     predicted_classes = model.predict_classes(inputs)
     accuracy = accuracy_score(labels, predicted_classes)
-    print('Predicted values', predicted_values)
-    print('Predicted classes', predicted_classes)
     print("Accuracy: " + str(accuracy))
+    """Precision: proportion of predictions that were correct in regards to their labels.
+    Recall: proportion of labels that were correctly predicted."""
+    print(classification_report(labels, predicted_classes, np.unique(labels)))
