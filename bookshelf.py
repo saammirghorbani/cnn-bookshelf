@@ -1,8 +1,11 @@
-from skimage.util.shape import view_as_blocks
-import numpy as np
-import cv2
-import cnn
 import glob
+import sys
+
+import cv2
+import numpy as np
+from skimage.util.shape import view_as_blocks
+
+import cnn
 
 input_train_path = "data/dataset1/train/*.JPG"
 label_train_path = "data/dataset1/train/masks/*.JPG"
@@ -77,6 +80,7 @@ def outlier_free_set(patches, labels):
 
 
 def main():
+    np.set_printoptions(threshold=sys.maxsize)
     img_train = [read_and_format_image(file) for file in glob.glob(input_train_path)]
     lbl_train = [read_and_format_mask(file) for file in glob.glob(label_train_path)]
     img_test = [read_and_format_image(file)for file in glob.glob(input_test_path)]
