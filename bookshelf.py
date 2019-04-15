@@ -14,7 +14,9 @@ label_test_path = "data/dataset1/test/masks/*.JPG"
 patch_dim = (32, 32)
 patch_channels = 3
 # minimum ratio of foreground to background pixels to label as foreground
-fg_threshold = 0.7
+fg_threshold = 0.6
+# minimum ratio of foreground to background pixels to label as background
+bg_threshold = 0.4
 
 
 def image_to_patches(im):
@@ -46,11 +48,13 @@ def patches_to_labels(mask_patches):
 
 
 def calc_label(mask_patch):
-    patch_sum = mask_patch.sum() / (patch_dim[0] * patch_dim[1])
-    if patch_sum > fg_threshold:
+    fg_pixel_ratio = mask_patch.sum() / (patch_dim[0] * patch_dim[1])
+    if fg_pixel_ratio > fg_threshold:
         return 1
-    else:
+    elif fg_pixel_ratio < bg_threshold:
         return 0
+    else:
+        return -1
 
 
 def read_and_format_image(file):
@@ -66,15 +70,13 @@ def read_and_format_mask(file):
     return img
 
 
-def outlier_free_set(patches, labels):
-    outlier_indices = []
+def prune_unreliable_samples(patches, labels):
+    unrel_indices = []
     for n in range(0, len(labels)):
-        # TODO: update in [calc_label] if this method is to be used
         if labels[n] == -1:
-            outlier_indices.append(n)
-
-    pa = np.delete(patches, outlier_indices, axis=0)
-    lb = np.delete(labels, outlier_indices, axis=0)
+            unrel_indices.append(n)
+    pa = np.delete(patches, unrel_indices, axis=0)
+    lb = np.delete(labels, unrel_indices, axis=0)
     pa = np.reshape(pa, (len(lb), 32, 32, 3))
     return pa, lb
 
@@ -99,7 +101,7 @@ def main():
         patches_x = int(width / patch_dim[0])
         patches_y = int(height / patch_dim[1])
         labels = patches_to_labels(mask_to_patches(lbl_train[n]))
-        # im_patches, labels = outlier_free_set(im_patches, labels)
+        im_patches, labels = prune_unreliable_samples(im_patches, labels)
         print('Training sample:', n+1)
         cnn.train(im_patches, labels)
 
@@ -113,6 +115,7 @@ def main():
         patches_x = int(width / patch_dim[0])
         patches_y = int(height / patch_dim[1])
         labels = patches_to_labels(mask_to_patches(lbl_test[n]))
+        im_patches, labels = prune_unreliable_samples(im_patches, labels)
         print('Testing sample:', n+1)
         cnn.test(im_patches, labels)
 
