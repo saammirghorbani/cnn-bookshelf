@@ -6,5 +6,5 @@ pip3 install glob3 matplotlib numpy opencv-python scikit-image scikit-learn tens
 ```
 #### Run program
 ```bash
-python3 booshelf.py
+python3 bookshelf.py
 ```
