@@ -3,6 +3,7 @@ import sys
 
 import cv2
 import numpy as np
+from matplotlib import pyplot as plt
 from skimage.util.shape import view_as_blocks
 
 import cnn
@@ -39,22 +40,30 @@ def mask_to_patches(im):
     return patches_array
 
 
-def patches_to_labels(mask_patches):
-    """returns a patches_x by patches_y matrix corresponding to all patch labels"""
+def patches_to_labels_train(patches):
+    """returns a patches_x * patches_y array corresponding to all patch labels except unreliable ones"""
     labels = np.zeros(patches_x * patches_y)
     for n in range(0, patches_x * patches_y):
-        labels[n] = calc_label(mask_patches[n])
+        fg_pixel_ratio = patches[n].sum() / (patch_dim[0] * patch_dim[1])
+        if fg_pixel_ratio > fg_threshold:
+            labels[n] = 1
+        elif fg_pixel_ratio < bg_threshold:
+            labels[n] = 0
+        else:
+            labels[n] = -1
     return labels
 
 
-def calc_label(mask_patch):
-    fg_pixel_ratio = mask_patch.sum() / (patch_dim[0] * patch_dim[1])
-    if fg_pixel_ratio > fg_threshold:
-        return 1
-    elif fg_pixel_ratio < bg_threshold:
-        return 0
-    else:
-        return -1
+def patches_to_labels_test(patches):
+    """returns a patches_x * patches_y array corresponding to all patch labels"""
+    labels = np.zeros(patches_x * patches_y)
+    for n in range(0, patches_x * patches_y):
+        fg_pixel_ratio = patches[n].sum() / (patch_dim[0] * patch_dim[1])
+        if fg_pixel_ratio > fg_threshold:
+            labels[n] = 1
+        else:
+            labels[n] = 0
+    return labels
 
 
 def read_and_format_image(file):
@@ -77,8 +86,25 @@ def prune_unreliable_samples(patches, labels):
             unrel_indices.append(n)
     pa = np.delete(patches, unrel_indices, axis=0)
     lb = np.delete(labels, unrel_indices, axis=0)
-    pa = np.reshape(pa, (len(lb), 32, 32, 3))
+    pa = np.reshape(pa, (len(lb), patch_dim[0], patch_dim[1], patch_channels))
     return pa, lb
+
+
+def plot_results(image, predictions, labels, sample_nr):
+    output = np.reshape(predictions, [patches_y, patches_x])
+    lbl = np.reshape(labels, [patches_y, patches_x])
+    fig, axs = plt.subplots(nrows=1, ncols=3)
+
+    axs[0].imshow(cv2.cvtColor(image, cv2.COLOR_BGR2RGB))
+    axs[0].set_title('Input')
+
+    axs[1].imshow(output, cmap='gray')
+    axs[1].set_title('Output')
+
+    axs[2].imshow(lbl, cmap='gray')
+    axs[2].set_title('Ground Truth')
+
+    fig.suptitle('Testing sample ' + str(sample_nr), fontsize=16)
 
 
 def main():
@@ -100,7 +126,7 @@ def main():
         channels = 1
         patches_x = int(width / patch_dim[0])
         patches_y = int(height / patch_dim[1])
-        labels = patches_to_labels(mask_to_patches(lbl_train[n]))
+        labels = patches_to_labels_train(mask_to_patches(lbl_train[n]))
         im_patches, labels = prune_unreliable_samples(im_patches, labels)
         print('Training sample:', n+1)
         cnn.train(im_patches, labels)
@@ -114,10 +140,11 @@ def main():
         channels = 1
         patches_x = int(width / patch_dim[0])
         patches_y = int(height / patch_dim[1])
-        labels = patches_to_labels(mask_to_patches(lbl_test[n]))
-        im_patches, labels = prune_unreliable_samples(im_patches, labels)
+        labels = patches_to_labels_test(mask_to_patches(lbl_test[n]))
         print('Testing sample:', n+1)
-        cnn.test(im_patches, labels)
+        predictions = cnn.test(im_patches, labels)
+        plot_results(img_test[n], predictions, labels, n+1)
+    plt.show()
 
 
 if __name__ == '__main__':

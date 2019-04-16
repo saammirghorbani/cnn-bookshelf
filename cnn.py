@@ -55,3 +55,4 @@ def test(inputs, labels):
     """Precision: proportion of predictions that were correct in regards to their labels.
     Recall: proportion of labels that were correctly predicted."""
     print(classification_report(labels, predicted_classes, np.unique(labels)))
+    return predicted_classes
