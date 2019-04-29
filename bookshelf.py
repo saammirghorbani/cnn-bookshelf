@@ -15,9 +15,9 @@ label_test_path = "data/dataset1/test/masks/*.JPG"
 patch_dim = (32, 32)
 patch_channels = 3
 # minimum ratio of foreground to background pixels to label as foreground
-fg_threshold = 0.6
+fg_threshold = 0.7
 # minimum ratio of foreground to background pixels to label as background
-bg_threshold = 0.4
+bg_threshold = 0.3
 
 
 def image_to_patches(im):
@@ -42,16 +42,20 @@ def mask_to_patches(im):
 
 def patches_to_labels_train(patches):
     """returns a patches_x * patches_y array corresponding to all patch labels except unreliable ones"""
+    fg_count = 0
+    bg_count = 0
     labels = np.zeros(patches_x * patches_y)
     for n in range(0, patches_x * patches_y):
         fg_pixel_ratio = patches[n].sum() / (patch_dim[0] * patch_dim[1])
         if fg_pixel_ratio > fg_threshold:
             labels[n] = 1
+            fg_count += 1
         elif fg_pixel_ratio < bg_threshold:
             labels[n] = 0
+            bg_count += 1
         else:
             labels[n] = -1
-    return labels
+    return labels, fg_count, bg_count
 
 
 def patches_to_labels_test(patches):
@@ -86,6 +90,20 @@ def prune_unreliable_samples(patches, labels):
             unrel_indices.append(n)
     pa = np.delete(patches, unrel_indices, axis=0)
     lb = np.delete(labels, unrel_indices, axis=0)
+    pa = np.reshape(pa, (len(lb), patch_dim[0], patch_dim[1], patch_channels))
+    return pa, lb
+
+
+def balance_labels(patches, labels, fg_count, bg_count):
+    index = 0
+    removable_indices = []
+    while bg_count > fg_count:
+        if labels[index] == 0:
+            removable_indices.append(index)
+            bg_count -= 1
+        index += 1
+    pa = np.delete(patches, removable_indices, axis=0)
+    lb = np.delete(labels, removable_indices, axis=0)
     pa = np.reshape(pa, (len(lb), patch_dim[0], patch_dim[1], patch_channels))
     return pa, lb
 
@@ -126,8 +144,9 @@ def main():
         channels = 1
         patches_x = int(width / patch_dim[0])
         patches_y = int(height / patch_dim[1])
-        labels = patches_to_labels_train(mask_to_patches(lbl_train[n]))
+        labels, fg_count, bg_count = patches_to_labels_train(mask_to_patches(lbl_train[n]))
         im_patches, labels = prune_unreliable_samples(im_patches, labels)
+        im_patches, labels = balance_labels(im_patches, labels, fg_count, bg_count)
         print('Training sample:', n+1)
         cnn.train(im_patches, labels)
 

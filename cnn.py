@@ -45,7 +45,7 @@ def train(inputs, labels):
     # assign weights to classes to counter for imbalance
     class_weights = class_weight.compute_class_weight('balanced', np.unique(labels), labels)
     class_weights_dict = {i: class_weights[i] for i in range(0, len(class_weights))}
-    model.fit(x=inputs, y=labels, class_weight=class_weights_dict)
+    model.fit(x=inputs, y=labels, shuffle=True, class_weight=class_weights_dict, epochs=5)
 
 
 def test(inputs, labels):
