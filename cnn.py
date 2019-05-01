@@ -23,17 +23,24 @@ def build_model():
     # Convolution layer #2
     model.add(tf.keras.layers.Conv2D(
         filters=32,
-        kernel_size=[5, 5],
+        kernel_size=[3, 3],
         activation=tf.nn.relu))
-    # 10x10 neurons remaining
+    # 12x12 neurons remaining
 
     # Pooling layer #2
     model.add(tf.keras.layers.MaxPooling2D(pool_size=[2, 2], strides=2))
-    # 5x5 neurons remaining
+    # 6x6 neurons remaining
+
+    # Convolution layer #3
+    model.add(tf.keras.layers.Conv2D(
+        filters=16,
+        kernel_size=[5, 5],
+        activation=tf.nn.relu))
+    # 2x2 neurons remaining
 
     # Dense Layer
     model.add(tf.keras.layers.Flatten())
-    model.add(tf.keras.layers.Dense(units=25, activation=tf.nn.relu))
+    model.add(tf.keras.layers.Dense(units=4, activation=tf.nn.relu))
     # Reduce chance of overfitting with Dropout layer
     model.add(tf.keras.layers.Dropout(rate=0.3))
     model.add(tf.keras.layers.Dense(units=1, activation=tf.nn.sigmoid))
