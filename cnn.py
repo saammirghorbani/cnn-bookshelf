@@ -1,7 +1,6 @@
 import numpy as np
 import tensorflow as tf
 from sklearn.metrics import accuracy_score, classification_report
-from sklearn.utils import class_weight
 
 model = tf.keras.models.Sequential()
 
@@ -24,6 +23,7 @@ def build_model():
     model.add(tf.keras.layers.Conv2D(
         filters=32,
         kernel_size=[3, 3],
+        data_format='channels_last',
         activation=tf.nn.relu))
     # 12x12 neurons remaining
 
@@ -35,6 +35,7 @@ def build_model():
     model.add(tf.keras.layers.Conv2D(
         filters=16,
         kernel_size=[5, 5],
+        data_format='channels_last',
         activation=tf.nn.relu))
     # 2x2 neurons remaining
 
@@ -49,10 +50,7 @@ def build_model():
 
 
 def train(inputs, labels):
-    # assign weights to classes to counter for imbalance
-    class_weights = class_weight.compute_class_weight('balanced', np.unique(labels), labels)
-    class_weights_dict = {i: class_weights[i] for i in range(0, len(class_weights))}
-    model.fit(x=inputs, y=labels, shuffle=True, class_weight=class_weights_dict, epochs=5)
+    model.fit(x=inputs, y=labels, shuffle=True, epochs=5)
 
 
 def test(inputs, labels):
