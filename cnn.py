@@ -1,6 +1,18 @@
 import numpy as np
 import tensorflow as tf
 from sklearn.metrics import accuracy_score, classification_report
+import random as rn
+from tensorflow.python.keras import backend as kb
+
+
+np.random.seed(42)
+rn.seed(12345)
+
+session_conf = tf.ConfigProto(intra_op_parallelism_threads=1,
+                              inter_op_parallelism_threads=1)
+
+sess = tf.Session(graph=tf.get_default_graph(), config=session_conf)
+kb.set_session(sess)
 
 model = tf.keras.models.Sequential()
 
