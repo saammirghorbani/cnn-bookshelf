@@ -125,16 +125,11 @@ def plot_results(image, predictions, labels, sample_nr):
     fig.suptitle('Testing sample ' + str(sample_nr), fontsize=16)
 
 
-def main():
-    np.set_printoptions(threshold=sys.maxsize)
+def train_and_save():
+    global height, width, channels, patches_x, patches_y
     img_train = [read_and_format_image(file) for file in glob.glob(input_train_path)]
     lbl_train = [read_and_format_mask(file) for file in glob.glob(label_train_path)]
-    img_test = [read_and_format_image(file)for file in glob.glob(input_test_path)]
-    lbl_test = [read_and_format_mask(file) for file in glob.glob(label_test_path)]
-
     cnn.build_model()
-    global height, width, channels, patches_x, patches_y
-
     for n in range(0, len(img_train)):
         height, width, channels = img_train[n].shape
         patches_x = int(width / patch_dim[0])
@@ -149,7 +144,13 @@ def main():
         im_patches, labels = balance_labels(im_patches, labels, fg_count, bg_count)
         print('Training sample:', n+1)
         cnn.train(im_patches, labels)
+    cnn.save_model()
 
+
+def test_model(model):
+    global height, width, channels, patches_x, patches_y
+    img_test = [read_and_format_image(file)for file in glob.glob(input_test_path)]
+    lbl_test = [read_and_format_mask(file) for file in glob.glob(label_test_path)]
     for n in range(0, len(img_test)):
         height, width, channels = img_test[n].shape
         patches_x = int(width / patch_dim[0])
@@ -160,10 +161,17 @@ def main():
         patches_x = int(width / patch_dim[0])
         patches_y = int(height / patch_dim[1])
         labels = patches_to_labels_test(mask_to_patches(lbl_test[n]))
-        print('Testing sample:', n+1)
-        predictions = cnn.test(im_patches, labels)
-        plot_results(img_test[n], predictions, labels, n+1)
+        print('Testing sample:', n + 1)
+        predictions = cnn.test(im_patches, labels, model)
+        plot_results(img_test[n], predictions, labels, n + 1)
     plt.show()
+
+
+def main():
+    np.set_printoptions(threshold=sys.maxsize)
+    train_and_save()  # comment out if you want to use previously saved model
+    model = cnn.load_model()
+    test_model(model)
 
 
 if __name__ == '__main__':
