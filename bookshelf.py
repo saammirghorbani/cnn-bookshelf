@@ -136,7 +136,6 @@ def train_and_save():
         patches_y = int(height / patch_dim[1])
         im_patches = image_to_patches(img_train[n])
         height, width = lbl_train[n].shape
-        channels = 1
         patches_x = int(width / patch_dim[0])
         patches_y = int(height / patch_dim[1])
         labels, fg_count, bg_count = patches_to_labels_train(mask_to_patches(lbl_train[n]))
@@ -157,7 +156,6 @@ def test_model(model):
         patches_y = int(height / patch_dim[1])
         im_patches = image_to_patches(img_test[n])
         height, width = lbl_test[n].shape
-        channels = 1
         patches_x = int(width / patch_dim[0])
         patches_y = int(height / patch_dim[1])
         labels = patches_to_labels_test(mask_to_patches(lbl_test[n]))

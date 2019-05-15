@@ -3,9 +3,6 @@ import tensorflow as tf
 from sklearn.metrics import accuracy_score, classification_report
 from tensorflow.python.keras.models import model_from_json
 
-# random seed for reproducibility
-np.random.seed(7)
-
 model = tf.keras.models.Sequential()
 
 
@@ -59,21 +56,21 @@ def compile_model(m):
 def save_model():
     # serialize model to JSON
     model_json = model.to_json()
-    with open("model.json", "w") as json_file:
+    with open("models/model.json", "w") as json_file:
         json_file.write(model_json)
     # serialize weights to HDF5
-    model.save_weights("model.h5")
+    model.save_weights("models/model.h5")
     print("Saved model to disk")
 
 
 def load_model():
     # load json and create model
-    json_file = open('model.json', 'r')
+    json_file = open('models/model.json', 'r')
     loaded_model_json = json_file.read()
     json_file.close()
     loaded_model = model_from_json(loaded_model_json)
     # load weights into new model
-    loaded_model.load_weights("model.h5")
+    loaded_model.load_weights("models/model.h5")
     print("Loaded model from disk")
     compile_model(loaded_model)
     return loaded_model
